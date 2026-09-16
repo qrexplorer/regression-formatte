@@ -155,6 +155,23 @@
       overflow-x: auto;
       min-height: 120px;
     }
+    #result table {
+  border-collapse: collapse;
+  width: 100%;
+  font-family: Arial, sans-serif;
+}
+
+#result th,
+#result td {
+  border: 1px solid #bbb;
+  padding: 8px 10px;
+  text-align: left;
+}
+
+#result th {
+  font-weight: bold;
+  background: #f3f3f3;
+}
   </style>
 </head>
 
@@ -670,8 +687,14 @@ convertButton.addEventListener(
         await response.text();
 
 
-      result.textContent =
-        output;
+      const selectedFormat =
+  document.getElementById("format").value;
+
+if (selectedFormat === "academic") {
+  result.innerHTML = output;
+} else {
+  result.textContent = output;
+}
 
       resultCard.style.display =
         "block";
@@ -719,36 +742,59 @@ copyButton.addEventListener(
   "click",
   async function() {
 
+    const selectedFormat =
+      document.getElementById("format").value;
+
     try {
 
-      await navigator.clipboard.writeText(
-        result.textContent
-      );
+      if (selectedFormat === "academic") {
+
+        const html = result.innerHTML;
+        const plainText = result.innerText;
+
+        const clipboardItem =
+          new ClipboardItem({
+            "text/html":
+              new Blob(
+                [html],
+                { type: "text/html" }
+              ),
+
+            "text/plain":
+              new Blob(
+                [plainText],
+                { type: "text/plain" }
+              )
+          });
+
+        await navigator.clipboard.write([
+          clipboardItem
+        ]);
+
+      } else {
+
+        await navigator.clipboard.writeText(
+          result.textContent
+        );
+
+      }
 
       copyButton.textContent =
         "Copied!";
 
-      setTimeout(
-        function() {
+      setTimeout(function() {
+        copyButton.textContent =
+          "Copy result";
+      }, 1500);
 
-          copyButton.textContent =
-            "Copy result";
+    } catch (error) {
 
-        },
-        1500
-      );
-
-    }
-
-    catch (error) {
+      console.error(error);
 
       status.textContent =
         "Could not copy result.";
-
     }
-
   }
-);
 
 
 /* ==========================================
