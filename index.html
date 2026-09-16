@@ -1,225 +1,681 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
 
   <title>Regression Formatter</title>
 
+
   <style>
+
     * {
       box-sizing: border-box;
     }
 
+
     body {
+
       margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f5f6f8;
-      color: #202124;
+
+      font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+      background:
+        #f5f6f8;
+
+      color:
+        #202124;
+
     }
+
 
     .container {
-      max-width: 900px;
-      margin: 50px auto;
-      padding: 0 20px;
+
+      max-width:
+        1000px;
+
+      margin:
+        50px auto;
+
+      padding:
+        0 20px;
+
     }
+
 
     h1 {
-      margin-bottom: 8px;
+
+      margin-bottom:
+        8px;
+
     }
+
 
     .subtitle {
-      color: #666;
-      margin-bottom: 30px;
+
+      color:
+        #666;
+
+      margin-bottom:
+        30px;
+
     }
+
 
     .card {
-      background: white;
-      padding: 24px;
-      border-radius: 12px;
-      margin-bottom: 20px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+
+      background:
+        white;
+
+      padding:
+        24px;
+
+      border-radius:
+        12px;
+
+      margin-bottom:
+        20px;
+
+      box-shadow:
+        0 2px 10px
+        rgba(0,0,0,0.06);
+
     }
 
-    /* =========================
+
+
+    /* =========================================
        INPUT AREA
-       Same appearance as before
-    ========================= */
+    ========================================= */
+
 
     #pasteBox {
-      min-height: 260px;
-      border: 3px dashed #aaa;
-      border-radius: 10px;
-      padding: 25px;
-      outline: none;
-      cursor: text;
-      background: #fafafa;
 
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      min-height:
+        260px;
 
-      text-align: center;
+      border:
+        3px dashed #aaa;
+
+      border-radius:
+        10px;
+
+      padding:
+        25px;
+
+      outline:
+        none;
+
+      cursor:
+        text;
+
+      background:
+        #fafafa;
+
+      display:
+        flex;
+
+      align-items:
+        center;
+
+      justify-content:
+        center;
+
+      text-align:
+        center;
+
     }
+
 
     #pasteBox:focus {
-      border-color: #333;
-      background: white;
+
+      border-color:
+        #333;
+
+      background:
+        white;
+
     }
+
 
     #pasteBox.has-content {
-      display: block;
-      text-align: left;
-      border-style: solid;
-      cursor: default;
+
+      display:
+        block;
+
+      text-align:
+        left;
+
+      border-style:
+        solid;
+
+      cursor:
+        default;
+
     }
+
 
     #instructions {
-      color: #777;
-      line-height: 1.6;
+
+      color:
+        #777;
+
+      line-height:
+        1.6;
+
     }
+
 
     #textPreview {
-      display: none;
-      white-space: pre-wrap;
-      font-family: Consolas, Monaco, monospace;
-      overflow-x: auto;
-      max-height: 500px;
-      overflow-y: auto;
+
+      display:
+        none;
+
+      white-space:
+        pre-wrap;
+
+      font-family:
+        Consolas,
+        Monaco,
+        monospace;
+
+      overflow-x:
+        auto;
+
+      overflow-y:
+        auto;
+
+      max-height:
+        500px;
+
     }
+
 
     #imagePreview {
-      display: none;
-      max-width: 100%;
-      max-height: 500px;
-      margin: auto;
+
+      display:
+        none;
+
+      max-width:
+        100%;
+
+      max-height:
+        500px;
+
+      margin:
+        auto;
+
     }
+
 
     .detected {
-      margin-bottom: 12px;
-      font-weight: bold;
+
+      margin-bottom:
+        12px;
+
+      font-weight:
+        bold;
+
     }
 
-    /* =========================
+
+
+    /* =========================================
        CONTROLS
-    ========================= */
+    ========================================= */
+
 
     label {
-      font-weight: bold;
+
+      font-weight:
+        bold;
+
     }
+
 
     select {
-      width: 100%;
-      margin-top: 8px;
-      margin-bottom: 20px;
-      padding: 12px;
-      font-size: 16px;
-      border-radius: 7px;
-      border: 1px solid #ccc;
-      background: white;
+
+      width:
+        100%;
+
+      margin-top:
+        8px;
+
+      margin-bottom:
+        20px;
+
+      padding:
+        12px;
+
+      font-size:
+        16px;
+
+      border-radius:
+        7px;
+
+      border:
+        1px solid #ccc;
+
+      background:
+        white;
+
     }
+
 
     button {
-      border: none;
-      border-radius: 7px;
-      padding: 12px 22px;
-      font-size: 16px;
-      cursor: pointer;
-      background: #111;
-      color: white;
+
+      border:
+        none;
+
+      border-radius:
+        7px;
+
+      padding:
+        12px 22px;
+
+      font-size:
+        16px;
+
+      cursor:
+        pointer;
+
+      background:
+        #111;
+
+      color:
+        white;
+
     }
+
 
     button:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
+
+      opacity:
+        0.5;
+
+      cursor:
+        not-allowed;
+
     }
+
 
     .button-row {
-      display: flex;
-      gap: 10px;
+
+      display:
+        flex;
+
+      gap:
+        10px;
+
     }
+
 
     #clearButton {
-      background: #e5e5e5;
-      color: #222;
+
+      background:
+        #e5e5e5;
+
+      color:
+        #222;
+
     }
+
 
     #status {
-      margin-top: 15px;
-      color: #666;
+
+      margin-top:
+        15px;
+
+      color:
+        #666;
+
     }
 
-    /* =========================
+
+
+    /* =========================================
        RESULT AREA
-    ========================= */
+    ========================================= */
+
 
     #resultCard {
-      display: none;
+
+      display:
+        none;
+
     }
 
-    /* Default output:
-       LaTeX, Markdown, CSV, prose */
+
     #result {
-      white-space: pre-wrap;
-      font-family: Consolas, Monaco, monospace;
-      background: #f7f7f7;
-      border: 1px solid #ddd;
-      padding: 18px;
-      border-radius: 8px;
-      margin-bottom: 15px;
-      overflow-x: auto;
-      min-height: 120px;
+
+      white-space:
+        pre-wrap;
+
+      font-family:
+        Consolas,
+        Monaco,
+        monospace;
+
+      background:
+        #f7f7f7;
+
+      border:
+        1px solid #ddd;
+
+      padding:
+        18px;
+
+      border-radius:
+        8px;
+
+      margin-bottom:
+        15px;
+
+      overflow-x:
+        auto;
+
+      min-height:
+        120px;
+
     }
 
-    /* Academic output overrides */
+
+
+    /* =========================================
+       JOURNAL-STYLE ACADEMIC TABLE
+    ========================================= */
+
+
     #result.academic-output {
-      white-space: normal;
-      font-family: Arial, sans-serif;
-      background: white;
-      border: none;
-      padding: 0;
+
+      white-space:
+        normal;
+
+      font-family:
+        "Times New Roman",
+        Times,
+        serif;
+
+      background:
+        white;
+
+      border:
+        none;
+
+      border-radius:
+        0;
+
+      padding:
+        20px 12px;
+
+      color:
+        #111;
+
     }
 
-    #result.academic-output table {
-      border-collapse: collapse;
-      width: 100%;
-      font-family: Arial, sans-serif;
-      font-size: 15px;
+
+    #result .regression-table {
+
+      width:
+        100%;
+
+      border-collapse:
+        collapse;
+
+      table-layout:
+        fixed;
+
+      font-family:
+        "Times New Roman",
+        Times,
+        serif;
+
+      font-size:
+        18px;
+
+      line-height:
+        1.25;
+
+      border-top:
+        1.2px solid #222;
+
+      border-bottom:
+        1.2px solid #222;
+
     }
 
-    #result.academic-output th,
-    #result.academic-output td {
-      border: 1px solid #aaa;
-      padding: 8px 10px;
-      text-align: left;
-      vertical-align: top;
+
+    #result .regression-table th,
+    #result .regression-table td {
+
+      border:
+        none;
+
+      padding:
+        4px 12px;
+
     }
 
-    #result.academic-output th {
-      font-weight: bold;
-      background: #f3f3f3;
+
+    #result .regression-table thead {
+
+      border-bottom:
+        1px solid #222;
+
+    }
+
+
+    #result .regression-table thead th {
+
+      text-align:
+        center;
+
+      font-weight:
+        normal;
+
+      vertical-align:
+        bottom;
+
+    }
+
+
+    #result .regression-table th:first-child,
+    #result .regression-table td:first-child {
+
+      width:
+        34%;
+
+      text-align:
+        left;
+
+    }
+
+
+    #result .regression-table td:not(:first-child) {
+
+      text-align:
+        center;
+
+    }
+
+
+    #result .model-number {
+
+      font-style:
+        normal;
+
+      font-weight:
+        normal;
+
+      padding-bottom:
+        2px;
+
+    }
+
+
+    #result .model-name {
+
+      font-style:
+        italic;
+
+      font-weight:
+        normal;
+
+      padding-top:
+        0;
+
+      padding-bottom:
+        6px;
+
+    }
+
+
+    #result .variable-name {
+
+      font-style:
+        italic;
+
+      text-align:
+        left;
+
+      vertical-align:
+        top;
+
+      padding-top:
+        25px !important;
+
+      padding-bottom:
+        2px;
+
+    }
+
+
+    #result .estimate {
+
+      text-align:
+        center;
+
+      vertical-align:
+        top;
+
+      padding-top:
+        25px !important;
+
+      padding-bottom:
+        2px;
+
+      line-height:
+        1.45;
+
+    }
+
+
+    #result .first-stat td {
+
+      border-top:
+        1px solid #222;
+
+      padding-top:
+        8px;
+
+    }
+
+
+    #result .model-stats td {
+
+      padding-top:
+        2px;
+
+      padding-bottom:
+        2px;
+
+    }
+
+
+
+    /* =========================================
+       SMALL SCREEN
+    ========================================= */
+
+
+    @media (max-width: 700px) {
+
+      .container {
+
+        margin-top:
+          20px;
+
+      }
+
+
+      #result .regression-table {
+
+        font-size:
+          15px;
+
+      }
+
+
+      #result .regression-table th,
+      #result .regression-table td {
+
+        padding-left:
+          6px;
+
+        padding-right:
+          6px;
+
+      }
+
     }
 
   </style>
+
 </head>
 
 
 <body>
 
+
 <div class="container">
 
-  <h1>Regression Formatter</h1>
+
+  <h1>
+    Regression Formatter
+  </h1>
+
 
   <div class="subtitle">
-    Copy Stata regression output or a screenshot, then paste it below.
+
+    Copy Stata regression output or a screenshot,
+    then paste it below.
+
   </div>
 
 
-  <!-- INPUT -->
+
+  <!-- =====================================
+       INPUT
+  ====================================== -->
+
 
   <div class="card">
 
-    <div id="detectedType" class="detected"></div>
+
+    <div
+      id="detectedType"
+      class="detected"
+    ></div>
+
 
     <div
       id="pasteBox"
@@ -227,494 +683,806 @@
       tabindex="0"
     >
 
+
       <div id="instructions">
-        <strong>Click here and press Ctrl+V</strong>
+
+        <strong>
+          Click here and press Ctrl+V
+        </strong>
+
         <br><br>
+
         You can paste:
+
         <br>
+
         Stata regression output
+
         <br>
+
         or
+
         <br>
+
         a screenshot
+
       </div>
 
+
       <div id="textPreview"></div>
+
 
       <img
         id="imagePreview"
         alt="Regression screenshot preview"
       >
 
+
     </div>
+
 
   </div>
 
 
-  <!-- FORMAT -->
+
+  <!-- =====================================
+       FORMAT
+  ====================================== -->
+
 
   <div class="card">
 
+
     <label for="format">
+
       Output format
+
     </label>
+
 
     <select id="format">
 
+
       <option value="academic">
+
         Academic regression table
+
       </option>
+
 
       <option value="latex">
+
         LaTeX
+
       </option>
+
 
       <option value="markdown">
+
         Markdown table
+
       </option>
+
 
       <option value="csv">
+
         Excel / CSV
+
       </option>
 
+
       <option value="prose">
+
         Academic prose
+
       </option>
+
 
     </select>
 
 
+
     <div class="button-row">
+
 
       <button
         id="convertButton"
         disabled
       >
+
         Convert
+
       </button>
 
+
       <button id="clearButton">
+
         Clear
+
       </button>
+
 
     </div>
 
+
     <div id="status"></div>
+
 
   </div>
 
 
-  <!-- RESULT -->
+
+  <!-- =====================================
+       RESULT
+  ====================================== -->
+
 
   <div
     class="card"
     id="resultCard"
   >
 
-    <h2>Result</h2>
+
+    <h2>
+      Result
+    </h2>
+
 
     <div id="result"></div>
 
+
     <button id="copyButton">
+
       Copy result
+
     </button>
+
 
   </div>
 
+
 </div>
+
 
 
 <script>
 
 
 /* =====================================================
-   YOUR MAKE WEBHOOK
+   ADD YOUR MAKE WEBHOOK HERE
 ===================================================== */
 
+
 const MAKE_WEBHOOK_URL =
-  "https://hook.eu1.make.com/xtwa8bkohosk3augcxmlpjdkd5olysjo";
+  "PASTE_YOUR_MAKE_WEBHOOK_URL_HERE";
+
 
 
 /* =====================================================
-   VARIABLES
+   STATE
 ===================================================== */
 
-let inputType = null;
-let pastedText = null;
-let pastedImage = null;
+
+let inputType =
+  null;
+
+
+let pastedText =
+  null;
+
+
+let pastedImage =
+  null;
+
 
 
 /* =====================================================
    ELEMENTS
 ===================================================== */
 
+
 const pasteBox =
-  document.getElementById("pasteBox");
+  document.getElementById(
+    "pasteBox"
+  );
+
 
 const instructions =
-  document.getElementById("instructions");
+  document.getElementById(
+    "instructions"
+  );
+
 
 const textPreview =
-  document.getElementById("textPreview");
+  document.getElementById(
+    "textPreview"
+  );
+
 
 const imagePreview =
-  document.getElementById("imagePreview");
+  document.getElementById(
+    "imagePreview"
+  );
+
 
 const detectedType =
-  document.getElementById("detectedType");
+  document.getElementById(
+    "detectedType"
+  );
+
 
 const formatSelect =
-  document.getElementById("format");
+  document.getElementById(
+    "format"
+  );
+
 
 const convertButton =
-  document.getElementById("convertButton");
+  document.getElementById(
+    "convertButton"
+  );
+
 
 const clearButton =
-  document.getElementById("clearButton");
+  document.getElementById(
+    "clearButton"
+  );
+
 
 const copyButton =
-  document.getElementById("copyButton");
+  document.getElementById(
+    "copyButton"
+  );
+
 
 const resultCard =
-  document.getElementById("resultCard");
+  document.getElementById(
+    "resultCard"
+  );
+
 
 const result =
-  document.getElementById("result");
+  document.getElementById(
+    "result"
+  );
+
 
 const status =
-  document.getElementById("status");
+  document.getElementById(
+    "status"
+  );
+
 
 
 /* =====================================================
-   PASTE
+   PASTE HANDLER
 ===================================================== */
 
+
 pasteBox.addEventListener(
+
   "paste",
+
   function(event) {
 
+
     event.preventDefault();
+
 
     const clipboard =
       event.clipboardData;
 
+
     if (!clipboard) {
+
 
       status.textContent =
         "Clipboard could not be read.";
 
+
       return;
+
     }
 
 
-    /* Try image */
 
-    for (const item of clipboard.items) {
+    /* -----------------------------------------
+       IMAGE
+    ----------------------------------------- */
+
+
+    for (
+      const item
+      of clipboard.items
+    ) {
+
 
       if (
+
         item.type &&
-        item.type.startsWith("image/")
+
+        item.type.startsWith(
+          "image/"
+        )
+
       ) {
+
 
         const file =
           item.getAsFile();
 
+
         if (file) {
 
-          pastedImage = file;
-          pastedText = null;
-          inputType = "image";
 
-          showImage(file);
+          pastedImage =
+            file;
+
+
+          pastedText =
+            null;
+
+
+          inputType =
+            "image";
+
+
+          showImage(
+            file
+          );
+
 
           return;
+
         }
+
       }
+
     }
 
 
-    /* Try plain text */
+
+    /* -----------------------------------------
+       PLAIN TEXT
+    ----------------------------------------- */
+
 
     const plainText =
-      clipboard.getData("text/plain");
+      clipboard.getData(
+        "text/plain"
+      );
+
 
     if (
+
       plainText &&
+
       plainText.trim().length > 0
+
     ) {
 
-      pastedText = plainText;
-      pastedImage = null;
-      inputType = "text";
-
-      showText(plainText);
-
-      return;
-    }
-
-
-    /* Try HTML */
-
-    const html =
-      clipboard.getData("text/html");
-
-    if (
-      html &&
-      html.trim().length > 0
-    ) {
-
-      const temp =
-        document.createElement("div");
-
-      temp.innerHTML =
-        html;
-
-      const convertedText =
-        temp.innerText;
 
       pastedText =
-        convertedText;
+        plainText;
+
 
       pastedImage =
         null;
 
+
       inputType =
         "text";
 
-      showText(convertedText);
+
+      showText(
+        plainText
+      );
+
 
       return;
+
     }
+
+
+
+    /* -----------------------------------------
+       HTML FALLBACK
+    ----------------------------------------- */
+
+
+    const html =
+      clipboard.getData(
+        "text/html"
+      );
+
+
+    if (
+
+      html &&
+
+      html.trim().length > 0
+
+    ) {
+
+
+      const temp =
+        document.createElement(
+          "div"
+        );
+
+
+      temp.innerHTML =
+        html;
+
+
+      const convertedText =
+        temp.innerText;
+
+
+      pastedText =
+        convertedText;
+
+
+      pastedImage =
+        null;
+
+
+      inputType =
+        "text";
+
+
+      showText(
+        convertedText
+      );
+
+
+      return;
+
+    }
+
 
 
     status.textContent =
       "Clipboard content was detected, but it was not readable as text or image.";
 
+
   }
+
 );
+
 
 
 /* =====================================================
    SHOW TEXT
 ===================================================== */
 
+
 function showText(text) {
+
 
   instructions.style.display =
     "none";
 
+
   imagePreview.style.display =
     "none";
+
 
   textPreview.style.display =
     "block";
 
+
   textPreview.textContent =
     text;
+
 
   pasteBox.classList.add(
     "has-content"
   );
 
+
   detectedType.textContent =
     "✓ Stata text detected";
+
 
   convertButton.disabled =
     false;
 
+
   resultCard.style.display =
     "none";
 
+
   status.textContent =
     "Ready to convert.";
+
+
 }
+
 
 
 /* =====================================================
    SHOW IMAGE
 ===================================================== */
 
+
 function showImage(file) {
 
+
   const imageURL =
-    URL.createObjectURL(file);
+    URL.createObjectURL(
+      file
+    );
+
 
   instructions.style.display =
     "none";
 
+
   textPreview.style.display =
     "none";
+
 
   imagePreview.style.display =
     "block";
 
+
   imagePreview.src =
     imageURL;
+
 
   pasteBox.classList.add(
     "has-content"
   );
 
+
   detectedType.textContent =
     "✓ Screenshot detected";
+
 
   convertButton.disabled =
     false;
 
+
   resultCard.style.display =
     "none";
 
+
   status.textContent =
     "Ready to convert.";
+
+
 }
 
 
-/* =====================================================
-   CLEAN ACADEMIC HTML
 
-   This removes code fences if GPT accidentally
-   sends them.
+/* =====================================================
+   CLEAN GPT HTML
 ===================================================== */
 
-function cleanAcademicHTML(output) {
+
+function cleanAcademicHTML(
+  output
+) {
+
 
   let html =
     output.trim();
 
-  html =
-    html.replace(/^```html\s*/i, "");
 
   html =
-    html.replace(/^```\s*/i, "");
+    html.replace(
+      /^```html\s*/i,
+      ""
+    );
+
 
   html =
-    html.replace(/\s*```$/i, "");
+    html.replace(
+      /^```\s*/i,
+      ""
+    );
+
+
+  html =
+    html.replace(
+      /\s*```$/i,
+      ""
+    );
+
 
   return html.trim();
+
+
 }
+
 
 
 /* =====================================================
    CONVERT
 ===================================================== */
 
+
 convertButton.addEventListener(
+
   "click",
+
   async function() {
 
+
     if (!inputType) {
+
 
       status.textContent =
         "Paste regression output first.";
 
+
       return;
+
     }
 
 
+
     if (
+
       MAKE_WEBHOOK_URL.includes(
         "PASTE_YOUR"
       )
+
     ) {
+
 
       status.textContent =
         "Add your Make webhook URL to index.html first.";
 
+
       return;
+
     }
+
 
 
     convertButton.disabled =
       true;
 
+
     convertButton.textContent =
       "Converting...";
+
 
     status.textContent =
       "Processing regression...";
 
 
+
     try {
+
 
       const formData =
         new FormData();
 
 
+
       formData.append(
+
         "format",
+
         formatSelect.value
+
       );
+
 
 
       formData.append(
+
         "input_type",
+
         inputType
+
       );
+
 
 
       if (
         inputType === "text"
       ) {
 
+
         formData.append(
+
           "text",
+
           pastedText
+
         );
 
       }
+
 
 
       if (
         inputType === "image"
       ) {
 
+
         formData.append(
+
           "file",
+
           pastedImage,
+
           "regression.png"
+
         );
 
       }
+
 
 
       const response =
         await fetch(
+
           MAKE_WEBHOOK_URL,
+
           {
-            method: "POST",
-            body: formData
+
+            method:
+              "POST",
+
+            body:
+              formData
+
           }
+
         );
 
 
-      if (!response.ok) {
+
+      if (
+        !response.ok
+      ) {
+
 
         throw new Error(
+
           "Make returned HTTP " +
+
           response.status
+
         );
 
       }
+
 
 
       const output =
         await response.text();
 
 
-      /* Academic:
-         render HTML table */
+
+      /* -----------------------------------------
+         ACADEMIC TABLE
+      ----------------------------------------- */
+
 
       if (
+
         formatSelect.value ===
         "academic"
+
       ) {
 
+
         const cleanHTML =
-          cleanAcademicHTML(output);
+          cleanAcademicHTML(
+            output
+          );
+
 
         result.classList.add(
           "academic-output"
         );
+
 
         result.innerHTML =
           cleanHTML;
@@ -722,14 +1490,19 @@ convertButton.addEventListener(
       }
 
 
-      /* Everything else:
-         plain text */
+
+      /* -----------------------------------------
+         OTHER OUTPUT TYPES
+      ----------------------------------------- */
+
 
       else {
+
 
         result.classList.remove(
           "academic-output"
         );
+
 
         result.textContent =
           output;
@@ -737,255 +1510,632 @@ convertButton.addEventListener(
       }
 
 
+
       resultCard.style.display =
         "block";
+
 
       status.textContent =
         "Done.";
 
 
+
       resultCard.scrollIntoView({
-        behavior: "smooth",
-        block: "start"
+
+        behavior:
+          "smooth",
+
+        block:
+          "start"
+
       });
+
 
     }
 
 
-    catch (error) {
+    catch(error) {
 
-      console.error(error);
+
+      console.error(
+        error
+      );
+
 
       status.textContent =
         "Error: " +
         error.message;
+
 
     }
 
 
     finally {
 
+
       convertButton.disabled =
         false;
+
 
       convertButton.textContent =
         "Convert";
 
+
     }
 
   }
+
 );
 
 
+
 /* =====================================================
-   CREATE WORD-FRIENDLY TABLE HTML
+   CREATE WORD-FRIENDLY JOURNAL TABLE
+
+   Word does not automatically inherit the CSS from
+   the webpage, so the key journal styling is added
+   inline ONLY when copying.
 ===================================================== */
+
 
 function createWordHTML() {
 
+
   const clone =
-    result.cloneNode(true);
+    result.cloneNode(
+      true
+    );
 
 
   const table =
-    clone.querySelector("table");
+    clone.querySelector(
+      ".regression-table"
+    );
 
 
-  if (table) {
-
-    table.style.borderCollapse =
-      "collapse";
-
-    table.style.width =
-      "100%";
-
-    table.style.fontFamily =
-      "Arial, sans-serif";
-
-    table.style.fontSize =
-      "11pt";
+  if (!table) {
 
 
-    const cells =
-      table.querySelectorAll(
+    return clone.innerHTML;
+
+  }
+
+
+
+  table.style.width =
+    "100%";
+
+
+  table.style.borderCollapse =
+    "collapse";
+
+
+  table.style.fontFamily =
+    "'Times New Roman', Times, serif";
+
+
+  table.style.fontSize =
+    "11pt";
+
+
+  table.style.borderTop =
+    "1px solid black";
+
+
+  table.style.borderBottom =
+    "1px solid black";
+
+
+
+  /* -----------------------------------------
+     ALL CELLS
+  ----------------------------------------- */
+
+
+  const cells =
+    table.querySelectorAll(
+      "th, td"
+    );
+
+
+  cells.forEach(
+
+    function(cell) {
+
+
+      cell.style.borderLeft =
+        "none";
+
+
+      cell.style.borderRight =
+        "none";
+
+
+      cell.style.borderTop =
+        "none";
+
+
+      cell.style.borderBottom =
+        "none";
+
+
+      cell.style.padding =
+        "3px 8px";
+
+
+      cell.style.fontFamily =
+        "'Times New Roman', Times, serif";
+
+
+      cell.style.fontSize =
+        "11pt";
+
+
+      cell.style.verticalAlign =
+        "top";
+
+
+    }
+
+  );
+
+
+
+  /* -----------------------------------------
+     HEADER BOTTOM RULE
+  ----------------------------------------- */
+
+
+  const headerRows =
+    table.querySelectorAll(
+      "thead tr"
+    );
+
+
+  if (
+    headerRows.length > 0
+  ) {
+
+
+    const lastHeader =
+      headerRows[
+        headerRows.length - 1
+      ];
+
+
+    lastHeader
+      .querySelectorAll(
         "th, td"
+      )
+      .forEach(
+
+        function(cell) {
+
+
+          cell.style.borderBottom =
+            "1px solid black";
+
+
+        }
+
       );
 
+  }
 
-    cells.forEach(
+
+
+  /* -----------------------------------------
+     VARIABLE NAMES
+  ----------------------------------------- */
+
+
+  table
+    .querySelectorAll(
+      ".variable-name"
+    )
+    .forEach(
+
       function(cell) {
 
-        cell.style.border =
-          "1px solid #999";
 
-        cell.style.padding =
-          "6px 8px";
+        cell.style.fontStyle =
+          "italic";
+
 
         cell.style.textAlign =
           "left";
 
-        cell.style.verticalAlign =
-          "top";
+
+        cell.style.paddingTop =
+          "14px";
+
 
       }
+
     );
 
 
-    const headers =
-      table.querySelectorAll("th");
+
+  /* -----------------------------------------
+     MODEL NUMBERS
+  ----------------------------------------- */
 
 
-    headers.forEach(
-      function(header) {
+  table
+    .querySelectorAll(
+      ".model-number"
+    )
+    .forEach(
 
-        header.style.fontWeight =
-          "bold";
+      function(cell) {
+
+
+        cell.style.textAlign =
+          "center";
+
+
+        cell.style.fontWeight =
+          "normal";
+
 
       }
+
     );
+
+
+
+  /* -----------------------------------------
+     MODEL NAMES
+  ----------------------------------------- */
+
+
+  table
+    .querySelectorAll(
+      ".model-name"
+    )
+    .forEach(
+
+      function(cell) {
+
+
+        cell.style.textAlign =
+          "center";
+
+
+        cell.style.fontStyle =
+          "italic";
+
+
+        cell.style.fontWeight =
+          "normal";
+
+
+      }
+
+    );
+
+
+
+  /* -----------------------------------------
+     ESTIMATES
+  ----------------------------------------- */
+
+
+  table
+    .querySelectorAll(
+      ".estimate"
+    )
+    .forEach(
+
+      function(cell) {
+
+
+        cell.style.textAlign =
+          "center";
+
+
+        cell.style.paddingTop =
+          "14px";
+
+
+        cell.style.lineHeight =
+          "1.35";
+
+
+      }
+
+    );
+
+
+
+  /* -----------------------------------------
+     FIRST MODEL-STATISTICS RULE
+  ----------------------------------------- */
+
+
+  const firstStat =
+    table.querySelector(
+      ".first-stat"
+    );
+
+
+  if (firstStat) {
+
+
+    firstStat
+      .querySelectorAll(
+        "td, th"
+      )
+      .forEach(
+
+        function(cell) {
+
+
+          cell.style.borderTop =
+            "1px solid black";
+
+
+          cell.style.paddingTop =
+            "5px";
+
+
+        }
+
+      );
+
   }
 
 
+
+  /* -----------------------------------------
+     MODEL STAT ALIGNMENT
+  ----------------------------------------- */
+
+
+  table
+    .querySelectorAll(
+      ".model-stats"
+    )
+    .forEach(
+
+      function(row) {
+
+
+        const rowCells =
+          row.querySelectorAll(
+            "td, th"
+          );
+
+
+        rowCells.forEach(
+
+          function(cell, index) {
+
+
+            cell.style.textAlign =
+              index === 0
+                ? "left"
+                : "center";
+
+
+          }
+
+        );
+
+
+      }
+
+    );
+
+
+
   return clone.innerHTML;
+
+
 }
+
 
 
 /* =====================================================
    COPY RESULT
 ===================================================== */
 
+
 copyButton.addEventListener(
+
   "click",
+
   async function() {
+
 
     try {
 
 
-      /* Academic:
-         copy as rich HTML */
+
+      /* -----------------------------------------
+         ACADEMIC = RICH HTML FOR WORD
+      ----------------------------------------- */
+
 
       if (
+
         formatSelect.value ===
         "academic"
+
       ) {
+
 
         const html =
           createWordHTML();
 
+
         const plainText =
           result.innerText;
+
 
 
         const clipboardItem =
           new ClipboardItem({
 
             "text/html":
+
               new Blob(
+
                 [html],
+
                 {
+
                   type:
                     "text/html"
+
                 }
+
               ),
 
+
             "text/plain":
+
               new Blob(
+
                 [plainText],
+
                 {
+
                   type:
                     "text/plain"
+
                 }
+
               )
 
           });
 
 
+
         await navigator.clipboard.write([
+
           clipboardItem
+
         ]);
+
 
       }
 
 
-      /* Other formats:
-         normal text */
+
+      /* -----------------------------------------
+         OTHER FORMATS = TEXT
+      ----------------------------------------- */
+
 
       else {
 
+
         await navigator.clipboard.writeText(
+
           result.textContent
+
         );
 
+
       }
+
 
 
       copyButton.textContent =
         "Copied!";
 
+
       status.textContent =
         "Copied to clipboard.";
 
 
+
       setTimeout(
+
         function() {
+
 
           copyButton.textContent =
             "Copy result";
 
+
         },
+
         1500
+
       );
+
 
     }
 
 
-    catch (error) {
+    catch(error) {
 
-      console.error(error);
+
+      console.error(
+        error
+      );
+
 
       status.textContent =
         "Could not copy result.";
 
+
     }
 
   }
+
 );
+
 
 
 /* =====================================================
    CLEAR
 ===================================================== */
 
+
 clearButton.addEventListener(
+
   "click",
+
   function() {
+
 
     inputType =
       null;
 
+
     pastedText =
       null;
+
 
     pastedImage =
       null;
 
 
+
     textPreview.textContent =
       "";
+
 
     textPreview.style.display =
       "none";
 
 
+
     imagePreview.src =
       "";
+
 
     imagePreview.style.display =
       "none";
 
 
+
     instructions.style.display =
       "block";
+
 
 
     pasteBox.classList.remove(
@@ -993,51 +2143,69 @@ clearButton.addEventListener(
     );
 
 
+
     detectedType.textContent =
       "";
+
 
 
     convertButton.disabled =
       true;
 
 
+
     resultCard.style.display =
       "none";
 
 
+
     result.innerHTML =
       "";
+
 
     result.classList.remove(
       "academic-output"
     );
 
 
+
     status.textContent =
       "";
 
 
+
     pasteBox.focus();
 
+
   }
+
 );
+
 
 
 /* =====================================================
    AUTOFOCUS
 ===================================================== */
 
+
 window.addEventListener(
+
   "load",
+
   function() {
+
 
     pasteBox.focus();
 
+
   }
+
 );
 
 
 </script>
 
+
 </body>
+
 </html>
