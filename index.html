@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,19 +14,23 @@
 
     body {
       margin: 0;
-      font-family: Arial, sans-serif;
+      font-family: Arial, Helvetica, sans-serif;
       background: #f5f6f8;
       color: #202124;
     }
 
     .container {
-      max-width: 900px;
+      max-width: 950px;
       margin: 50px auto;
       padding: 0 20px;
     }
 
     h1 {
       margin-bottom: 8px;
+    }
+
+    h2 {
+      margin-top: 0;
     }
 
     .subtitle {
@@ -38,8 +43,12 @@
       padding: 24px;
       border-radius: 12px;
       margin-bottom: 20px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
     }
+
+    /* -------------------------
+       Paste area
+    ------------------------- */
 
     #pasteBox {
       min-height: 260px;
@@ -53,7 +62,6 @@
       display: flex;
       align-items: center;
       justify-content: center;
-
       text-align: center;
     }
 
@@ -79,8 +87,11 @@
       white-space: pre-wrap;
       font-family: Consolas, Monaco, monospace;
       overflow-x: auto;
-      max-height: 500px;
       overflow-y: auto;
+      max-height: 500px;
+      background: #fafafa;
+      padding: 12px;
+      border-radius: 6px;
     }
 
     #imagePreview {
@@ -90,10 +101,14 @@
       margin: auto;
     }
 
-    .detected {
+    #detectedType {
       margin-bottom: 12px;
       font-weight: bold;
     }
+
+    /* -------------------------
+       Controls
+    ------------------------- */
 
     label {
       font-weight: bold;
@@ -128,6 +143,7 @@
     .button-row {
       display: flex;
       gap: 10px;
+      flex-wrap: wrap;
     }
 
     #clearButton {
@@ -140,744 +156,1079 @@
       color: #666;
     }
 
+    /* -------------------------
+       Result
+    ------------------------- */
+
     #resultCard {
       display: none;
     }
 
     #result {
+      overflow-x: auto;
+      min-height: 80px;
+    }
+
+    /* Plain-text output */
+
+    #result.plain-output {
       white-space: pre-wrap;
       font-family: Consolas, Monaco, monospace;
       background: #f7f7f7;
       border: 1px solid #ddd;
       padding: 18px;
       border-radius: 8px;
-      margin-bottom: 15px;
-      overflow-x: auto;
-      min-height: 120px;
     }
+
+    /* Academic HTML table */
+
+    #result.academic-output {
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
     #result table {
-  border-collapse: collapse;
-  width: 100%;
-  font-family: Arial, sans-serif;
-}
+      border-collapse: collapse;
+      width: 100%;
+      margin: 0;
+      font-size: 15px;
+    }
 
-#result th,
-#result td {
-  border: 1px solid #bbb;
-  padding: 8px 10px;
-  text-align: left;
-}
+    #result th,
+    #result td {
+      border: 1px solid #b7b7b7;
+      padding: 8px 10px;
+      text-align: left;
+      vertical-align: top;
+    }
 
-#result th {
-  font-weight: bold;
-  background: #f3f3f3;
-}
+    #result th {
+      font-weight: bold;
+      background: #f2f2f2;
+    }
+
+    #result tr:last-child td {
+      font-size: 14px;
+    }
+
+    #copyButton {
+      margin-top: 18px;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        margin-top: 20px;
+      }
+
+      .card {
+        padding: 16px;
+      }
+
+      #pasteBox {
+        min-height: 200px;
+      }
+    }
   </style>
 </head>
 
+
 <body>
 
-<div class="container">
+  <div class="container">
 
-  <h1>Regression Formatter</h1>
+    <h1>Regression Formatter</h1>
 
-  <div class="subtitle">
-    Copy Stata regression output or a screenshot, then paste it below.
-  </div>
+    <div class="subtitle">
+      Copy Stata regression output or a screenshot, then paste it below.
+    </div>
 
-  <div class="card">
 
-    <div id="detectedType" class="detected"></div>
+    <!-- =============================
+         INPUT
+    ============================== -->
 
-    <div
-      id="pasteBox"
-      contenteditable="true"
-      tabindex="0"
-    >
+    <div class="card">
 
-      <div id="instructions">
-        <strong>Click here and press Ctrl+V</strong>
-        <br><br>
-        You can paste:
-        <br>
-        Stata regression output
-        <br>
-        or
-        <br>
-        a screenshot
+      <div id="detectedType"></div>
+
+      <div
+        id="pasteBox"
+        contenteditable="true"
+        tabindex="0"
+      >
+
+        <div id="instructions">
+
+          <strong>Click here and press Ctrl+V</strong>
+
+          <br><br>
+
+          Paste either:
+
+          <br>
+          Stata regression output
+
+          <br>
+          or
+
+          <br>
+          a screenshot
+
+        </div>
+
+
+        <div id="textPreview"></div>
+
+
+        <img
+          id="imagePreview"
+          alt="Regression screenshot preview"
+        >
+
       </div>
 
-      <div id="textPreview"></div>
+    </div>
 
-      <img
-        id="imagePreview"
-        alt="Regression screenshot preview"
-      >
+
+    <!-- =============================
+         FORMAT
+    ============================== -->
+
+    <div class="card">
+
+      <label for="format">
+        Output format
+      </label>
+
+      <select id="format">
+
+        <option value="academic">
+          Academic regression table
+        </option>
+
+        <option value="latex">
+          LaTeX
+        </option>
+
+        <option value="markdown">
+          Markdown table
+        </option>
+
+        <option value="csv">
+          Excel / CSV
+        </option>
+
+        <option value="prose">
+          Academic prose
+        </option>
+
+      </select>
+
+
+      <div class="button-row">
+
+        <button
+          id="convertButton"
+          disabled
+        >
+          Convert
+        </button>
+
+        <button id="clearButton">
+          Clear
+        </button>
+
+      </div>
+
+
+      <div id="status"></div>
+
+    </div>
+
+
+    <!-- =============================
+         RESULT
+    ============================== -->
+
+    <div
+      class="card"
+      id="resultCard"
+    >
+
+      <h2>Result</h2>
+
+      <div id="result"></div>
+
+      <button id="copyButton">
+        Copy result
+      </button>
 
     </div>
 
   </div>
 
 
-  <div class="card">
+  <script>
 
-    <label for="format">
-      Output format
-    </label>
+    /* =====================================================
+       IMPORTANT:
+       PUT YOUR MAKE WEBHOOK URL HERE
+    ===================================================== */
 
-    <select id="format">
-
-      <option value="academic">
-        Academic regression table
-      </option>
-
-      <option value="latex">
-        LaTeX
-      </option>
-
-      <option value="markdown">
-        Markdown table
-      </option>
-
-      <option value="csv">
-        Excel / CSV
-      </option>
-
-      <option value="prose">
-        Academic prose
-      </option>
-
-    </select>
+    const MAKE_WEBHOOK_URL =
+      "https://hook.eu1.make.com/xtwa8bkohosk3augcxmlpjdkd5olysjo";
 
 
-    <div class="button-row">
+    /* =====================================================
+       VARIABLES
+    ===================================================== */
 
-      <button
-        id="convertButton"
-        disabled
-      >
-        Convert
-      </button>
+    let inputType = null;
 
-      <button id="clearButton">
-        Clear
-      </button>
+    let pastedText = null;
 
-    </div>
-
-    <div id="status"></div>
-
-  </div>
+    let pastedImage = null;
 
 
-  <div
-    class="card"
-    id="resultCard"
-  >
+    /* =====================================================
+       ELEMENTS
+    ===================================================== */
 
-    <h2>Result</h2>
+    const pasteBox =
+      document.getElementById("pasteBox");
 
-    <div id="result"></div>
+    const instructions =
+      document.getElementById("instructions");
 
-    <button id="copyButton">
-      Copy result
-    </button>
+    const textPreview =
+      document.getElementById("textPreview");
 
-  </div>
+    const imagePreview =
+      document.getElementById("imagePreview");
 
-</div>
+    const detectedType =
+      document.getElementById("detectedType");
 
+    const formatSelect =
+      document.getElementById("format");
 
-<script>
+    const convertButton =
+      document.getElementById("convertButton");
 
-/* ==========================================
-   ADD YOUR MAKE WEBHOOK URL HERE
-========================================== */
+    const clearButton =
+      document.getElementById("clearButton");
 
-const MAKE_WEBHOOK_URL =
-  "https://hook.eu1.make.com/xtwa8bkohosk3augcxmlpjdkd5olysjo";
+    const copyButton =
+      document.getElementById("copyButton");
 
+    const resultCard =
+      document.getElementById("resultCard");
 
-/* ==========================================
-   VARIABLES
-========================================== */
+    const result =
+      document.getElementById("result");
 
-let inputType = null;
-
-let pastedText = null;
-
-let pastedImage = null;
-
-
-/* ==========================================
-   HTML ELEMENTS
-========================================== */
-
-const pasteBox =
-  document.getElementById("pasteBox");
-
-const instructions =
-  document.getElementById("instructions");
-
-const textPreview =
-  document.getElementById("textPreview");
-
-const imagePreview =
-  document.getElementById("imagePreview");
-
-const detectedType =
-  document.getElementById("detectedType");
-
-const convertButton =
-  document.getElementById("convertButton");
-
-const clearButton =
-  document.getElementById("clearButton");
-
-const copyButton =
-  document.getElementById("copyButton");
-
-const resultCard =
-  document.getElementById("resultCard");
-
-const result =
-  document.getElementById("result");
-
-const status =
-  document.getElementById("status");
+    const status =
+      document.getElementById("status");
 
 
-/* ==========================================
-   PASTE HANDLER
+    /* =====================================================
+       PASTE HANDLER
+    ===================================================== */
 
-   Important:
-   This is attached directly to pasteBox because
-   this is the method we confirmed works.
-========================================== */
+    pasteBox.addEventListener(
+      "paste",
+      function (event) {
 
-pasteBox.addEventListener(
-  "paste",
-  function(event) {
+        event.preventDefault();
 
-    event.preventDefault();
+        const clipboard =
+          event.clipboardData;
 
-    const clipboard =
-      event.clipboardData;
+        if (!clipboard) {
 
-    if (!clipboard) {
-
-      status.textContent =
-        "Clipboard could not be read.";
-
-      return;
-    }
-
-
-    /* --------------------------------------
-       FIRST: LOOK FOR IMAGE
-    -------------------------------------- */
-
-    for (const item of clipboard.items) {
-
-      if (
-        item.type &&
-        item.type.startsWith("image/")
-      ) {
-
-        const file =
-          item.getAsFile();
-
-        if (file) {
-
-          pastedImage = file;
-
-          pastedText = null;
-
-          inputType = "image";
-
-          showImage(file);
+          status.textContent =
+            "Clipboard could not be read.";
 
           return;
         }
 
-      }
 
-    }
+        /* ---------------------------------
+           1. Look for an image first
+        ---------------------------------- */
 
+        for (const item of clipboard.items) {
 
-    /* --------------------------------------
-       SECOND: TRY TEXT
-    -------------------------------------- */
+          if (
+            item.type &&
+            item.type.startsWith("image/")
+          ) {
 
-    const plainText =
-      clipboard.getData("text/plain");
+            const file =
+              item.getAsFile();
 
+            if (file) {
 
-    if (
-      plainText &&
-      plainText.trim().length > 0
-    ) {
+              pastedImage = file;
 
-      pastedText =
-        plainText;
+              pastedText = null;
 
-      pastedImage =
-        null;
+              inputType = "image";
 
-      inputType =
-        "text";
+              showImage(file);
 
-      showText(
-        plainText
-      );
-
-      return;
-
-    }
-
-
-    /* --------------------------------------
-       THIRD: TRY HTML
-    -------------------------------------- */
-
-    const html =
-      clipboard.getData("text/html");
-
-
-    if (
-      html &&
-      html.trim().length > 0
-    ) {
-
-      const temp =
-        document.createElement("div");
-
-      temp.innerHTML =
-        html;
-
-      const convertedText =
-        temp.innerText;
-
-
-      pastedText =
-        convertedText;
-
-      pastedImage =
-        null;
-
-      inputType =
-        "text";
-
-
-      showText(
-        convertedText
-      );
-
-      return;
-
-    }
-
-
-    /* --------------------------------------
-       NOTHING USABLE
-    -------------------------------------- */
-
-    status.textContent =
-      "Clipboard content was detected, but it was not readable as text or image.";
-
-  }
-);
-
-
-/* ==========================================
-   SHOW TEXT
-========================================== */
-
-function showText(text) {
-
-  instructions.style.display =
-    "none";
-
-  imagePreview.style.display =
-    "none";
-
-  textPreview.style.display =
-    "block";
-
-  textPreview.textContent =
-    text;
-
-  pasteBox.classList.add(
-    "has-content"
-  );
-
-  detectedType.textContent =
-    "✓ Stata text detected";
-
-  convertButton.disabled =
-    false;
-
-  resultCard.style.display =
-    "none";
-
-  status.textContent =
-    "Ready to convert.";
-
-}
-
-
-/* ==========================================
-   SHOW IMAGE
-========================================== */
-
-function showImage(file) {
-
-  const imageURL =
-    URL.createObjectURL(file);
-
-  instructions.style.display =
-    "none";
-
-  textPreview.style.display =
-    "none";
-
-  imagePreview.style.display =
-    "block";
-
-  imagePreview.src =
-    imageURL;
-
-  pasteBox.classList.add(
-    "has-content"
-  );
-
-  detectedType.textContent =
-    "✓ Screenshot detected";
-
-  convertButton.disabled =
-    false;
-
-  resultCard.style.display =
-    "none";
-
-  status.textContent =
-    "Ready to convert.";
-
-}
-
-
-/* ==========================================
-   CONVERT
-========================================== */
-
-convertButton.addEventListener(
-  "click",
-  async function() {
-
-    if (!inputType) {
-
-      status.textContent =
-        "Paste regression output first.";
-
-      return;
-
-    }
-
-
-    if (
-      MAKE_WEBHOOK_URL.includes(
-        "PASTE_YOUR"
-      )
-    ) {
-
-      status.textContent =
-        "Add your Make webhook URL to index.html first.";
-
-      return;
-
-    }
-
-
-    convertButton.disabled =
-      true;
-
-    convertButton.textContent =
-      "Converting...";
-
-    status.textContent =
-      "Processing regression...";
-
-
-    try {
-
-      const formData =
-        new FormData();
-
-
-      /* Send selected format */
-
-      formData.append(
-        "format",
-        document.getElementById(
-          "format"
-        ).value
-      );
-
-
-      /* Send input type */
-
-      formData.append(
-        "input_type",
-        inputType
-      );
-
-
-      /* Send text */
-
-      if (
-        inputType === "text"
-      ) {
-
-        formData.append(
-          "text",
-          pastedText
-        );
-
-      }
-
-
-      /* Send image */
-
-      if (
-        inputType === "image"
-      ) {
-
-        formData.append(
-          "file",
-          pastedImage,
-          "regression.png"
-        );
-
-      }
-
-
-      /* Send request to Make */
-
-      const response =
-        await fetch(
-          MAKE_WEBHOOK_URL,
-          {
-            method: "POST",
-            body: formData
+              return;
+            }
           }
-        );
+        }
 
 
-      if (!response.ok) {
+        /* ---------------------------------
+           2. Try plain text
+        ---------------------------------- */
 
-        throw new Error(
-          "Make returned HTTP " +
-          response.status
-        );
+        const plainText =
+          clipboard.getData("text/plain");
+
+
+        if (
+          plainText &&
+          plainText.trim().length > 0
+        ) {
+
+          pastedText =
+            plainText;
+
+          pastedImage =
+            null;
+
+          inputType =
+            "text";
+
+          showText(
+            plainText
+          );
+
+          return;
+        }
+
+
+        /* ---------------------------------
+           3. Try HTML copied from Stata
+        ---------------------------------- */
+
+        const html =
+          clipboard.getData("text/html");
+
+
+        if (
+          html &&
+          html.trim().length > 0
+        ) {
+
+          const temp =
+            document.createElement("div");
+
+          temp.innerHTML =
+            html;
+
+          const convertedText =
+            temp.innerText;
+
+
+          pastedText =
+            convertedText;
+
+          pastedImage =
+            null;
+
+          inputType =
+            "text";
+
+
+          showText(
+            convertedText
+          );
+
+          return;
+        }
+
+
+        status.textContent =
+          "Clipboard content was detected, but it was not readable as text or image.";
 
       }
+    );
 
 
-      const output =
-        await response.text();
+    /* =====================================================
+       SHOW TEXT
+    ===================================================== */
 
+    function showText(text) {
 
-      const selectedFormat =
-  document.getElementById("format").value;
+      instructions.style.display =
+        "none";
 
-if (selectedFormat === "academic") {
-  result.innerHTML = output;
-} else {
-  result.textContent = output;
-}
+      imagePreview.style.display =
+        "none";
 
-      resultCard.style.display =
+      textPreview.style.display =
         "block";
 
-      status.textContent =
-        "Done.";
+      textPreview.textContent =
+        text;
 
+      pasteBox.classList.add(
+        "has-content"
+      );
 
-      resultCard.scrollIntoView({
-        behavior: "smooth",
-        block: "start"
-      });
-
-    }
-
-    catch (error) {
-
-      console.error(error);
-
-      status.textContent =
-        "Error: " +
-        error.message;
-
-    }
-
-    finally {
+      detectedType.textContent =
+        "✓ Stata text detected";
 
       convertButton.disabled =
         false;
 
-      convertButton.textContent =
-        "Convert";
+      resultCard.style.display =
+        "none";
 
+      status.textContent =
+        "Ready to convert.";
     }
 
-  }
-);
+
+    /* =====================================================
+       SHOW IMAGE
+    ===================================================== */
+
+    function showImage(file) {
+
+      const imageURL =
+        URL.createObjectURL(file);
 
 
-/* ==========================================
-   COPY RESULT
-========================================== */
+      instructions.style.display =
+        "none";
 
-copyButton.addEventListener(
-  "click",
-  async function() {
+      textPreview.style.display =
+        "none";
 
-    const selectedFormat =
-      document.getElementById("format").value;
+      imagePreview.style.display =
+        "block";
 
-    try {
+      imagePreview.src =
+        imageURL;
 
-      if (selectedFormat === "academic") {
 
-        const html = result.innerHTML;
-        const plainText = result.innerText;
+      pasteBox.classList.add(
+        "has-content"
+      );
 
-        const clipboardItem =
-          new ClipboardItem({
-            "text/html":
-              new Blob(
-                [html],
-                { type: "text/html" }
-              ),
 
-            "text/plain":
-              new Blob(
-                [plainText],
-                { type: "text/plain" }
-              )
-          });
+      detectedType.textContent =
+        "✓ Screenshot detected";
 
-        await navigator.clipboard.write([
-          clipboardItem
+
+      convertButton.disabled =
+        false;
+
+
+      resultCard.style.display =
+        "none";
+
+
+      status.textContent =
+        "Ready to convert.";
+    }
+
+
+    /* =====================================================
+       BASIC HTML SANITIZER FOR ACADEMIC TABLE
+
+       Allows table-related HTML only.
+    ===================================================== */
+
+    function sanitizeAcademicHTML(html) {
+
+      const parser =
+        new DOMParser();
+
+      const doc =
+        parser.parseFromString(
+          html,
+          "text/html"
+        );
+
+
+      const allowedTags =
+        new Set([
+          "TABLE",
+          "THEAD",
+          "TBODY",
+          "TFOOT",
+          "TR",
+          "TH",
+          "TD",
+          "CAPTION",
+          "STRONG",
+          "B",
+          "EM",
+          "I",
+          "SUP",
+          "SUB",
+          "BR"
         ]);
 
-      } else {
 
-        await navigator.clipboard.writeText(
-          result.textContent
+      const allElements =
+        Array.from(
+          doc.body.querySelectorAll("*")
+        );
+
+
+      for (const element of allElements) {
+
+        if (
+          !allowedTags.has(
+            element.tagName
+          )
+        ) {
+
+          element.replaceWith(
+            ...element.childNodes
+          );
+
+          continue;
+        }
+
+
+        /* Remove all attributes except
+           colspan and rowspan */
+
+        const attributes =
+          Array.from(
+            element.attributes
+          );
+
+
+        for (const attribute of attributes) {
+
+          if (
+            attribute.name !== "colspan" &&
+            attribute.name !== "rowspan"
+          ) {
+
+            element.removeAttribute(
+              attribute.name
+            );
+
+          }
+        }
+      }
+
+
+      return doc.body.innerHTML;
+    }
+
+
+    /* =====================================================
+       CONVERT
+    ===================================================== */
+
+    convertButton.addEventListener(
+      "click",
+      async function () {
+
+        if (!inputType) {
+
+          status.textContent =
+            "Paste regression output first.";
+
+          return;
+        }
+
+
+        if (
+          MAKE_WEBHOOK_URL.includes(
+            "PASTE_YOUR"
+          )
+        ) {
+
+          status.textContent =
+            "Add your Make webhook URL to index.html first.";
+
+          return;
+        }
+
+
+        convertButton.disabled =
+          true;
+
+        convertButton.textContent =
+          "Converting...";
+
+        status.textContent =
+          "Processing regression...";
+
+
+        try {
+
+          const formData =
+            new FormData();
+
+
+          /* Selected format */
+
+          formData.append(
+            "format",
+            formatSelect.value
+          );
+
+
+          /* Input type */
+
+          formData.append(
+            "input_type",
+            inputType
+          );
+
+
+          /* Text input */
+
+          if (
+            inputType === "text"
+          ) {
+
+            formData.append(
+              "text",
+              pastedText
+            );
+
+          }
+
+
+          /* Image input */
+
+          if (
+            inputType === "image"
+          ) {
+
+            formData.append(
+              "file",
+              pastedImage,
+              "regression.png"
+            );
+
+          }
+
+
+          /* Send to Make */
+
+          const response =
+            await fetch(
+              MAKE_WEBHOOK_URL,
+              {
+                method: "POST",
+                body: formData
+              }
+            );
+
+
+          if (!response.ok) {
+
+            throw new Error(
+              "Make returned HTTP " +
+              response.status
+            );
+
+          }
+
+
+          const output =
+            await response.text();
+
+
+          console.log(
+            "Make response:",
+            output
+          );
+
+
+          /* ---------------------------------
+             Detect Make default response
+          ---------------------------------- */
+
+          if (
+            output.trim().toLowerCase() ===
+            "accepted"
+          ) {
+
+            result.className =
+              "plain-output";
+
+            result.textContent =
+              "Make returned 'Accepted' instead of the generated result.";
+
+            resultCard.style.display =
+              "block";
+
+            status.textContent =
+              "Make did not return the AI output.";
+
+            return;
+          }
+
+
+          /* ---------------------------------
+             Academic = HTML table
+          ---------------------------------- */
+
+          if (
+            formatSelect.value ===
+            "academic"
+          ) {
+
+            result.className =
+              "academic-output";
+
+
+            const cleanHTML =
+              sanitizeAcademicHTML(
+                output
+              );
+
+
+            result.innerHTML =
+              cleanHTML;
+
+          }
+
+
+          /* ---------------------------------
+             Other formats = plain text
+          ---------------------------------- */
+
+          else {
+
+            result.className =
+              "plain-output";
+
+            result.textContent =
+              output;
+
+          }
+
+
+          resultCard.style.display =
+            "block";
+
+
+          status.textContent =
+            "Done.";
+
+
+          resultCard.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+          });
+
+        }
+
+
+        catch (error) {
+
+          console.error(error);
+
+          status.textContent =
+            "Error: " +
+            error.message;
+
+        }
+
+
+        finally {
+
+          convertButton.disabled =
+            false;
+
+          convertButton.textContent =
+            "Convert";
+
+        }
+
+      }
+    );
+
+
+    /* =====================================================
+       CREATE WORD-FRIENDLY HTML
+
+       Adds inline formatting so Word receives
+       a proper editable table.
+    ===================================================== */
+
+    function createWordHTML() {
+
+      const clone =
+        result.cloneNode(true);
+
+
+      const table =
+        clone.querySelector("table");
+
+
+      if (table) {
+
+        table.style.borderCollapse =
+          "collapse";
+
+        table.style.width =
+          "100%";
+
+        table.style.fontFamily =
+          "Arial, sans-serif";
+
+        table.style.fontSize =
+          "11pt";
+
+
+        const cells =
+          table.querySelectorAll(
+            "th, td"
+          );
+
+
+        cells.forEach(
+          function (cell) {
+
+            cell.style.border =
+              "1px solid #999";
+
+            cell.style.padding =
+              "6px 8px";
+
+            cell.style.textAlign =
+              "left";
+
+            cell.style.verticalAlign =
+              "top";
+
+          }
+        );
+
+
+        const headers =
+          table.querySelectorAll(
+            "th"
+          );
+
+
+        headers.forEach(
+          function (header) {
+
+            header.style.fontWeight =
+              "bold";
+
+          }
         );
 
       }
 
-      copyButton.textContent =
-        "Copied!";
 
-      setTimeout(function() {
-        copyButton.textContent =
-          "Copy result";
-      }, 1500);
-
-    } catch (error) {
-
-      console.error(error);
-
-      status.textContent =
-        "Could not copy result.";
+      return clone.innerHTML;
     }
-  }
 
 
-/* ==========================================
-   CLEAR
-========================================== */
+    /* =====================================================
+       COPY RESULT
+    ===================================================== */
 
-clearButton.addEventListener(
-  "click",
-  function() {
+    copyButton.addEventListener(
+      "click",
+      async function () {
 
-    inputType =
-      null;
+        try {
 
-    pastedText =
-      null;
+          /* ---------------------------------
+             Academic:
+             copy rich HTML + plain fallback
+          ---------------------------------- */
 
-    pastedImage =
-      null;
+          if (
+            formatSelect.value ===
+            "academic"
+          ) {
 
+            const html =
+              createWordHTML();
 
-    textPreview.textContent =
-      "";
-
-    textPreview.style.display =
-      "none";
-
-
-    imagePreview.src =
-      "";
-
-    imagePreview.style.display =
-      "none";
+            const plainText =
+              result.innerText;
 
 
-    instructions.style.display =
-      "block";
+            const clipboardItem =
+              new ClipboardItem({
+
+                "text/html":
+                  new Blob(
+                    [html],
+                    {
+                      type:
+                        "text/html"
+                    }
+                  ),
+
+                "text/plain":
+                  new Blob(
+                    [plainText],
+                    {
+                      type:
+                        "text/plain"
+                    }
+                  )
+
+              });
 
 
-    pasteBox.classList.remove(
-      "has-content"
+            await navigator.clipboard.write([
+              clipboardItem
+            ]);
+
+          }
+
+
+          /* ---------------------------------
+             Other formats:
+             normal text copy
+          ---------------------------------- */
+
+          else {
+
+            await navigator.clipboard.writeText(
+              result.textContent
+            );
+
+          }
+
+
+          copyButton.textContent =
+            "Copied!";
+
+
+          status.textContent =
+            "Copied to clipboard.";
+
+
+          setTimeout(
+            function () {
+
+              copyButton.textContent =
+                "Copy result";
+
+            },
+            1500
+          );
+
+        }
+
+
+        catch (error) {
+
+          console.error(error);
+
+          status.textContent =
+            "Could not copy result.";
+
+        }
+
+      }
     );
 
 
-    detectedType.textContent =
-      "";
+    /* =====================================================
+       CLEAR
+    ===================================================== */
+
+    clearButton.addEventListener(
+      "click",
+      function () {
+
+        inputType =
+          null;
+
+        pastedText =
+          null;
+
+        pastedImage =
+          null;
 
 
-    convertButton.disabled =
-      true;
+        textPreview.textContent =
+          "";
+
+        textPreview.style.display =
+          "none";
 
 
-    resultCard.style.display =
-      "none";
+        imagePreview.src =
+          "";
+
+        imagePreview.style.display =
+          "none";
 
 
-    result.textContent =
-      "";
+        instructions.style.display =
+          "block";
 
 
-    status.textContent =
-      "";
+        pasteBox.classList.remove(
+          "has-content"
+        );
 
 
-    pasteBox.focus();
-
-  }
-);
+        detectedType.textContent =
+          "";
 
 
-/* ==========================================
-   AUTOFOCUS PASTE BOX
-========================================== */
+        convertButton.disabled =
+          true;
 
-window.addEventListener(
-  "load",
-  function() {
 
-    pasteBox.focus();
+        resultCard.style.display =
+          "none";
 
-  }
-);
 
-</script>
+        result.innerHTML =
+          "";
+
+        result.className =
+          "";
+
+
+        status.textContent =
+          "";
+
+
+        pasteBox.focus();
+
+      }
+    );
+
+
+    /* =====================================================
+       AUTOFOCUS PASTE BOX
+    ===================================================== */
+
+    window.addEventListener(
+      "load",
+      function () {
+
+        pasteBox.focus();
+
+      }
+    );
+
+  </script>
 
 </body>
+
 </html>
