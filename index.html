@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Regression Formatter</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f6f7f9;
+      color: #202124;
+    }
+
+    .container {
+      max-width: 850px;
+      margin: 60px auto;
+      padding: 0 20px;
+    }
+
+    h1 {
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      color: #666;
+      margin-bottom: 30px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    }
+
+    #pasteZone {
+      border: 2px dashed #aaa;
+      border-radius: 10px;
+      min-height: 250px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      cursor: pointer;
+      overflow: hidden;
+      background: #fafafa;
+      transition: 0.2s;
+    }
+
+    #pasteZone:hover {
+      border-color: #555;
+    }
+
+    #pasteZone.has-image {
+      border-style: solid;
+      background: white;
+    }
+
+    #preview {
+      display: none;
+      max-width: 100%;
+      max-height: 500px;
+      object-fit: contain;
+    }
+
+    #pasteInstructions {
+      color: #777;
+      padding: 40px;
+    }
+
+    select,
+    button {
+      font-size: 16px;
+      padding: 12px;
+      border-radius: 7px;
+    }
+
+    select {
+      width: 100%;
+      border: 1px solid #ccc;
+      margin-top: 8px;
+      margin-bottom: 20px;
+      background: white;
+    }
+
+    button {
+      border: none;
+      cursor: pointer;
+      background: #111;
+      color: white;
+      padding-left: 22px;
+      padding-right: 22px;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .button-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    #clearButton {
+      background: #e5e5e5;
+      color: #222;
+    }
+
+    #resultCard {
+      display: none;
+    }
+
+    #result {
+      white-space: pre-wrap;
+      font-family: Consolas, Monaco, monospace;
+      background: #f7f7f7;
+      border: 1px solid #ddd;
+      padding: 18px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      min-height: 100px;
+      overflow-x: auto;
+    }
+
+    #status {
+      margin-top: 15px;
+      color: #666;
+    }
+
+    label {
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <h1>Regression Formatter</h1>
+  <div class="subtitle">
+    Copy a regression screenshot and press Ctrl+V.
+  </div>
+
+
+  <div class="card">
+
+    <div id="pasteZone">
+
+      <div id="pasteInstructions">
+        <strong>Paste regression screenshot here</strong>
+        <br><br>
+        Press <strong>Ctrl+V</strong>
+      </div>
+
+      <img id="preview" alt="Regression screenshot preview">
+
+    </div>
+
+  </div>
+
+
+  <div class="card">
+
+    <label for="format">Output format</label>
+
+    <select id="format">
+      <option value="academic">Academic regression table</option>
+      <option value="latex">LaTeX</option>
+      <option value="markdown">Markdown table</option>
+      <option value="csv">Excel / CSV</option>
+      <option value="prose">Academic prose</option>
+    </select>
+
+
+    <div class="button-row">
+
+      <button id="convertButton" disabled>
+        Convert
+      </button>
+
+      <button id="clearButton">
+        Clear
+      </button>
+
+    </div>
+
+    <div id="status"></div>
+
+  </div>
+
+
+  <div class="card" id="resultCard">
+
+    <h2>Result</h2>
+
+    <div id="result"></div>
+
+    <button id="copyButton">
+      Copy result
+    </button>
+
+  </div>
+
+</div>
+
+
+<script>
+
+const MAKE_WEBHOOK_URL =
+  "PASTE_YOUR_MAKE_WEBHOOK_URL_HERE";
+
+
+let imageBlob = null;
+let imageFilename = "regression.png";
+
+
+const preview = document.getElementById("preview");
+const pasteZone = document.getElementById("pasteZone");
+const pasteInstructions =
+  document.getElementById("pasteInstructions");
+
+const convertButton =
+  document.getElementById("convertButton");
+
+const clearButton =
+  document.getElementById("clearButton");
+
+const copyButton =
+  document.getElementById("copyButton");
+
+const resultCard =
+  document.getElementById("resultCard");
+
+const result =
+  document.getElementById("result");
+
+const status =
+  document.getElementById("status");
+
+
+
+/* ------------------------------
+   HANDLE CTRL+V
+--------------------------------*/
+
+document.addEventListener("paste", function(event) {
+
+  const items = event.clipboardData.items;
+
+  for (const item of items) {
+
+    if (item.type.startsWith("image/")) {
+
+      const blob = item.getAsFile();
+
+      if (!blob) return;
+
+      imageBlob = blob;
+
+      if (blob.type === "image/jpeg") {
+        imageFilename = "regression.jpg";
+      } else {
+        imageFilename = "regression.png";
+      }
+
+      showPreview(blob);
+
+      return;
+    }
+
+  }
+
+  status.textContent =
+    "No image was detected in the clipboard.";
+
+});
+
+
+
+/* ------------------------------
+   SHOW SCREENSHOT
+--------------------------------*/
+
+function showPreview(blob) {
+
+  const imageURL = URL.createObjectURL(blob);
+
+  preview.src = imageURL;
+
+  preview.style.display = "block";
+
+  pasteInstructions.style.display = "none";
+
+  pasteZone.classList.add("has-image");
+
+  convertButton.disabled = false;
+
+  resultCard.style.display = "none";
+
+  status.textContent =
+    "Screenshot ready.";
+
+}
+
+
+
+/* ------------------------------
+   SEND TO MAKE
+--------------------------------*/
+
+convertButton.addEventListener("click", async function() {
+
+  if (!imageBlob) {
+
+    status.textContent =
+      "Paste a screenshot first.";
+
+    return;
+  }
+
+
+  if (MAKE_WEBHOOK_URL.includes("PASTE_YOUR")) {
+
+    status.textContent =
+      "Add your Make webhook URL to index.html first.";
+
+    return;
+  }
+
+
+  convertButton.disabled = true;
+
+  convertButton.textContent =
+    "Converting...";
+
+  status.textContent =
+    "Reading regression...";
+
+
+  try {
+
+    const formData = new FormData();
+
+    formData.append(
+      "file",
+      imageBlob,
+      imageFilename
+    );
+
+    formData.append(
+      "format",
+      document.getElementById("format").value
+    );
+
+
+    const response =
+      await fetch(MAKE_WEBHOOK_URL, {
+
+        method: "POST",
+
+        body: formData
+
+      });
+
+
+    if (!response.ok) {
+
+      throw new Error(
+        "Make returned HTTP " +
+        response.status
+      );
+
+    }
+
+
+    const output =
+      await response.text();
+
+
+    result.textContent =
+      output;
+
+    resultCard.style.display =
+      "block";
+
+    status.textContent =
+      "Done.";
+
+  }
+
+  catch (error) {
+
+    console.error(error);
+
+    status.textContent =
+      "Error: " + error.message;
+
+  }
+
+  finally {
+
+    convertButton.disabled = false;
+
+    convertButton.textContent =
+      "Convert";
+
+  }
+
+});
+
+
+
+/* ------------------------------
+   COPY RESULT
+--------------------------------*/
+
+copyButton.addEventListener("click", async function() {
+
+  await navigator.clipboard.writeText(
+    result.textContent
+  );
+
+  copyButton.textContent =
+    "Copied!";
+
+  setTimeout(function() {
+
+    copyButton.textContent =
+      "Copy result";
+
+  }, 1500);
+
+});
+
+
+
+/* ------------------------------
+   CLEAR
+--------------------------------*/
+
+clearButton.addEventListener("click", function() {
+
+  imageBlob = null;
+
+  preview.src = "";
+
+  preview.style.display = "none";
+
+  pasteInstructions.style.display =
+    "block";
+
+  pasteZone.classList.remove(
+    "has-image"
+  );
+
+  convertButton.disabled = true;
+
+  resultCard.style.display = "none";
+
+  result.textContent = "";
+
+  status.textContent = "";
+
+});
+
+</script>
+
+</body>
+</html>
