@@ -3,13 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
   <title>Regression Formatter</title>
 
   <style>
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -24,9 +21,7 @@
       padding: 0 20px;
     }
 
-    h1 {
-      margin-bottom: 8px;
-    }
+    h1 { margin-bottom: 8px; }
 
     .subtitle {
       color: #666;
@@ -45,21 +40,15 @@
       border: 2px dashed #aaa;
       border-radius: 10px;
       min-height: 250px;
+      padding: 20px;
       display: flex;
       align-items: center;
       justify-content: center;
       text-align: center;
-      cursor: pointer;
-      overflow: hidden;
       background: #fafafa;
-      transition: 0.2s;
     }
 
-    #pasteZone:hover {
-      border-color: #555;
-    }
-
-    #pasteZone.has-image {
+    #pasteZone.has-content {
       border-style: solid;
       background: white;
     }
@@ -71,13 +60,25 @@
       object-fit: contain;
     }
 
-    #pasteInstructions {
-      color: #777;
-      padding: 40px;
+    #textPreview {
+      display: none;
+      width: 100%;
+      text-align: left;
+      white-space: pre-wrap;
+      font-family: Consolas, Monaco, monospace;
+      overflow-x: auto;
+      max-height: 500px;
+      overflow-y: auto;
+      background: #f7f7f7;
+      padding: 18px;
+      border-radius: 8px;
     }
 
-    select,
-    button {
+    #pasteInstructions {
+      color: #777;
+    }
+
+    select, button {
       font-size: 16px;
       padding: 12px;
       border-radius: 7px;
@@ -136,9 +137,12 @@
       color: #666;
     }
 
-    label {
+    #inputType {
+      margin-bottom: 12px;
       font-weight: bold;
     }
+
+    label { font-weight: bold; }
   </style>
 </head>
 
@@ -147,27 +151,31 @@
 <div class="container">
 
   <h1>Regression Formatter</h1>
+
   <div class="subtitle">
-    Copy a regression screenshot and press Ctrl+V.
+    Copy regression output from Stata or copy a screenshot, then press Ctrl+V.
   </div>
 
-
   <div class="card">
+
+    <div id="inputType"></div>
 
     <div id="pasteZone">
 
       <div id="pasteInstructions">
-        <strong>Paste regression screenshot here</strong>
+        <strong>Paste regression here</strong>
         <br><br>
-        Press <strong>Ctrl+V</strong>
+        Copy Stata output or a screenshot, then press
+        <strong>Ctrl+V</strong>
       </div>
 
-      <img id="preview" alt="Regression screenshot preview">
+      <img id="preview" alt="Regression screenshot">
+
+      <div id="textPreview"></div>
 
     </div>
 
   </div>
-
 
   <div class="card">
 
@@ -180,7 +188,6 @@
       <option value="csv">Excel / CSV</option>
       <option value="prose">Academic prose</option>
     </select>
-
 
     <div class="button-row">
 
@@ -197,7 +204,6 @@
     <div id="status"></div>
 
   </div>
-
 
   <div class="card" id="resultCard">
 
@@ -220,14 +226,25 @@ const MAKE_WEBHOOK_URL =
   "PASTE_YOUR_MAKE_WEBHOOK_URL_HERE";
 
 
-let imageBlob = null;
-let imageFilename = "regression.png";
+let pastedImage = null;
+let pastedText = null;
+let inputType = null;
 
 
-const preview = document.getElementById("preview");
-const pasteZone = document.getElementById("pasteZone");
+const preview =
+  document.getElementById("preview");
+
+const textPreview =
+  document.getElementById("textPreview");
+
+const pasteZone =
+  document.getElementById("pasteZone");
+
 const pasteInstructions =
   document.getElementById("pasteInstructions");
+
+const inputTypeLabel =
+  document.getElementById("inputType");
 
 const convertButton =
   document.getElementById("convertButton");
@@ -249,229 +266,369 @@ const status =
 
 
 
-/* ------------------------------
-   HANDLE CTRL+V
---------------------------------*/
+/* --------------------------------
+   PASTE HANDLER
+-------------------------------- */
 
 document.addEventListener("paste", function(event) {
 
-  const items = event.clipboardData.items;
+  const clipboard =
+    event.clipboardData;
 
-  for (const item of items) {
+  if (!clipboard) {
+    status.textContent =
+      "Clipboard access was not available.";
+    return;
+  }
+
+
+  /* First try normal browser-readable image */
+
+  for (const item of clipboard.items) {
 
     if (item.type.startsWith("image/")) {
 
-      const blob = item.getAsFile();
+      const blob =
+        item.getAsFile();
 
-      if (!blob) return;
+      if (blob) {
 
-      imageBlob = blob;
+        pastedImage = blob;
+        pastedText = null;
+        inputType = "image";
 
-      if (blob.type === "image/jpeg") {
-        imageFilename = "regression.jpg";
-      } else {
-        imageFilename = "regression.png";
+        showImage(blob);
+
+        event.preventDefault();
+        return;
       }
-
-      showPreview(blob);
-
-      return;
     }
-
   }
 
+
+  /* Otherwise try text */
+
+  const text =
+    clipboard.getData("text/plain");
+
+  if (text && text.trim().length > 0) {
+
+    pastedText = text;
+    pastedImage = null;
+    inputType = "text";
+
+    showText(text);
+
+    event.preventDefault();
+    return;
+  }
+
+
+  /* Useful diagnostic */
+
+  const availableTypes =
+    Array.from(clipboard.types || []);
+
+  console.log(
+    "Clipboard types:",
+    availableTypes
+  );
+
   status.textContent =
-    "No image was detected in the clipboard.";
+    "Clipboard content detected, but the browser could not read it as an image or text.";
 
 });
 
 
 
-/* ------------------------------
-   SHOW SCREENSHOT
---------------------------------*/
+/* --------------------------------
+   SHOW IMAGE
+-------------------------------- */
 
-function showPreview(blob) {
+function showImage(blob) {
 
-  const imageURL = URL.createObjectURL(blob);
+  const imageURL =
+    URL.createObjectURL(blob);
 
-  preview.src = imageURL;
+  preview.src =
+    imageURL;
 
-  preview.style.display = "block";
+  preview.style.display =
+    "block";
 
-  pasteInstructions.style.display = "none";
+  textPreview.style.display =
+    "none";
 
-  pasteZone.classList.add("has-image");
+  pasteInstructions.style.display =
+    "none";
 
-  convertButton.disabled = false;
+  pasteZone.classList.add(
+    "has-content"
+  );
 
-  resultCard.style.display = "none";
+  inputTypeLabel.textContent =
+    "✓ Screenshot detected";
+
+  convertButton.disabled =
+    false;
+
+  resultCard.style.display =
+    "none";
 
   status.textContent =
-    "Screenshot ready.";
+    "Ready to convert.";
 
 }
 
 
 
-/* ------------------------------
-   SEND TO MAKE
---------------------------------*/
+/* --------------------------------
+   SHOW TEXT
+-------------------------------- */
 
-convertButton.addEventListener("click", async function() {
+function showText(text) {
 
-  if (!imageBlob) {
+  textPreview.textContent =
+    text;
 
-    status.textContent =
-      "Paste a screenshot first.";
+  textPreview.style.display =
+    "block";
 
-    return;
-  }
+  preview.style.display =
+    "none";
 
+  pasteInstructions.style.display =
+    "none";
 
-  if (MAKE_WEBHOOK_URL.includes("PASTE_YOUR")) {
+  pasteZone.classList.add(
+    "has-content"
+  );
 
-    status.textContent =
-      "Add your Make webhook URL to index.html first.";
+  inputTypeLabel.textContent =
+    "✓ Stata text detected";
 
-    return;
-  }
+  convertButton.disabled =
+    false;
 
-
-  convertButton.disabled = true;
-
-  convertButton.textContent =
-    "Converting...";
+  resultCard.style.display =
+    "none";
 
   status.textContent =
-    "Reading regression...";
+    "Ready to convert.";
+
+}
 
 
-  try {
 
-    const formData = new FormData();
+/* --------------------------------
+   SEND TO MAKE
+-------------------------------- */
 
-    formData.append(
-      "file",
-      imageBlob,
-      imageFilename
-    );
+convertButton.addEventListener(
+  "click",
+  async function() {
 
-    formData.append(
-      "format",
-      document.getElementById("format").value
-    );
+    if (!inputType) {
 
+      status.textContent =
+        "Paste regression output first.";
 
-    const response =
-      await fetch(MAKE_WEBHOOK_URL, {
-
-        method: "POST",
-
-        body: formData
-
-      });
-
-
-    if (!response.ok) {
-
-      throw new Error(
-        "Make returned HTTP " +
-        response.status
-      );
-
+      return;
     }
 
 
-    const output =
-      await response.text();
+    if (
+      MAKE_WEBHOOK_URL.includes(
+        "PASTE_YOUR"
+      )
+    ) {
+
+      status.textContent =
+        "Add your Make webhook URL to index.html first.";
+
+      return;
+    }
 
 
-    result.textContent =
-      output;
-
-    resultCard.style.display =
-      "block";
-
-    status.textContent =
-      "Done.";
-
-  }
-
-  catch (error) {
-
-    console.error(error);
-
-    status.textContent =
-      "Error: " + error.message;
-
-  }
-
-  finally {
-
-    convertButton.disabled = false;
+    convertButton.disabled =
+      true;
 
     convertButton.textContent =
-      "Convert";
+      "Converting...";
+
+    status.textContent =
+      "Processing regression...";
+
+
+    try {
+
+      const formData =
+        new FormData();
+
+
+      /* Always send these */
+
+      formData.append(
+        "input_type",
+        inputType
+      );
+
+      formData.append(
+        "format",
+        document.getElementById("format").value
+      );
+
+
+      /* Send image OR text */
+
+      if (inputType === "image") {
+
+        formData.append(
+          "file",
+          pastedImage,
+          "regression.png"
+        );
+
+      }
+
+      else if (inputType === "text") {
+
+        formData.append(
+          "text",
+          pastedText
+        );
+
+      }
+
+
+      const response =
+        await fetch(
+          MAKE_WEBHOOK_URL,
+          {
+            method: "POST",
+            body: formData
+          }
+        );
+
+
+      if (!response.ok) {
+
+        throw new Error(
+          "Make returned HTTP " +
+          response.status
+        );
+
+      }
+
+
+      const output =
+        await response.text();
+
+
+      result.textContent =
+        output;
+
+      resultCard.style.display =
+        "block";
+
+      status.textContent =
+        "Done.";
+
+    }
+
+    catch (error) {
+
+      console.error(error);
+
+      status.textContent =
+        "Error: " +
+        error.message;
+
+    }
+
+    finally {
+
+      convertButton.disabled =
+        false;
+
+      convertButton.textContent =
+        "Convert";
+
+    }
 
   }
-
-});
-
+);
 
 
-/* ------------------------------
+
+/* --------------------------------
    COPY RESULT
---------------------------------*/
+-------------------------------- */
 
-copyButton.addEventListener("click", async function() {
+copyButton.addEventListener(
+  "click",
+  async function() {
 
-  await navigator.clipboard.writeText(
-    result.textContent
-  );
-
-  copyButton.textContent =
-    "Copied!";
-
-  setTimeout(function() {
+    await navigator.clipboard.writeText(
+      result.textContent
+    );
 
     copyButton.textContent =
-      "Copy result";
+      "Copied!";
 
-  }, 1500);
+    setTimeout(function() {
 
-});
+      copyButton.textContent =
+        "Copy result";
+
+    }, 1500);
+
+  }
+);
 
 
 
-/* ------------------------------
+/* --------------------------------
    CLEAR
---------------------------------*/
+-------------------------------- */
 
-clearButton.addEventListener("click", function() {
+clearButton.addEventListener(
+  "click",
+  function() {
 
-  imageBlob = null;
+    pastedImage = null;
+    pastedText = null;
+    inputType = null;
 
-  preview.src = "";
+    preview.src = "";
+    preview.style.display =
+      "none";
 
-  preview.style.display = "none";
+    textPreview.textContent = "";
+    textPreview.style.display =
+      "none";
 
-  pasteInstructions.style.display =
-    "block";
+    pasteInstructions.style.display =
+      "block";
 
-  pasteZone.classList.remove(
-    "has-image"
-  );
+    pasteZone.classList.remove(
+      "has-content"
+    );
 
-  convertButton.disabled = true;
+    inputTypeLabel.textContent = "";
 
-  resultCard.style.display = "none";
+    convertButton.disabled =
+      true;
 
-  result.textContent = "";
+    resultCard.style.display =
+      "none";
 
-  status.textContent = "";
+    result.textContent = "";
 
-});
+    status.textContent = "";
+
+  }
+);
 
 </script>
 
