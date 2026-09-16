@@ -1,77 +1,342 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Clipboard Test</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Regression Formatter</title>
 
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
+      margin: 0;
       font-family: Arial, sans-serif;
-      max-width: 800px;
+      background: #f5f6f8;
+      color: #202124;
+    }
+
+    .container {
+      max-width: 900px;
       margin: 50px auto;
+      padding: 0 20px;
+    }
+
+    h1 {
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      color: #666;
+      margin-bottom: 30px;
+    }
+
+    .card {
+      background: white;
+      padding: 24px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
     }
 
     #pasteBox {
-      border: 3px dashed #888;
-      min-height: 200px;
-      padding: 30px;
+      min-height: 260px;
+      border: 3px dashed #aaa;
       border-radius: 10px;
-      background: #f7f7f7;
+      padding: 25px;
       outline: none;
+      cursor: text;
+      background: #fafafa;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      text-align: center;
     }
 
     #pasteBox:focus {
-      border-color: #222;
+      border-color: #333;
       background: white;
     }
 
-    #debug {
-      margin-top: 20px;
-      padding: 20px;
-      background: #eee;
-      white-space: pre-wrap;
-      font-family: monospace;
+    #pasteBox.has-content {
+      display: block;
+      text-align: left;
+      border-style: solid;
+      cursor: default;
     }
 
-    img {
+    #instructions {
+      color: #777;
+      line-height: 1.6;
+    }
+
+    #textPreview {
+      display: none;
+      white-space: pre-wrap;
+      font-family: Consolas, Monaco, monospace;
+      overflow-x: auto;
+      max-height: 500px;
+      overflow-y: auto;
+    }
+
+    #imagePreview {
+      display: none;
       max-width: 100%;
-      margin-top: 20px;
+      max-height: 500px;
+      margin: auto;
+    }
+
+    .detected {
+      margin-bottom: 12px;
+      font-weight: bold;
+    }
+
+    label {
+      font-weight: bold;
+    }
+
+    select {
+      width: 100%;
+      margin-top: 8px;
+      margin-bottom: 20px;
+      padding: 12px;
+      font-size: 16px;
+      border-radius: 7px;
+      border: 1px solid #ccc;
+      background: white;
+    }
+
+    button {
+      border: none;
+      border-radius: 7px;
+      padding: 12px 22px;
+      font-size: 16px;
+      cursor: pointer;
+      background: #111;
+      color: white;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .button-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    #clearButton {
+      background: #e5e5e5;
+      color: #222;
+    }
+
+    #status {
+      margin-top: 15px;
+      color: #666;
+    }
+
+    #resultCard {
+      display: none;
+    }
+
+    #result {
+      white-space: pre-wrap;
+      font-family: Consolas, Monaco, monospace;
+      background: #f7f7f7;
+      border: 1px solid #ddd;
+      padding: 18px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      overflow-x: auto;
+      min-height: 120px;
     }
   </style>
 </head>
 
 <body>
 
-<h1>Clipboard Test</h1>
+<div class="container">
 
-<p>
-  Click inside the box below, then copy something from Stata
-  and press <strong>Ctrl+V</strong>.
-</p>
+  <h1>Regression Formatter</h1>
 
-<div id="pasteBox"
-     contenteditable="true"
-     tabindex="0">
-  Click here, then press Ctrl+V
+  <div class="subtitle">
+    Copy Stata regression output or a screenshot, then paste it below.
+  </div>
+
+  <div class="card">
+
+    <div id="detectedType" class="detected"></div>
+
+    <div
+      id="pasteBox"
+      contenteditable="true"
+      tabindex="0"
+    >
+
+      <div id="instructions">
+        <strong>Click here and press Ctrl+V</strong>
+        <br><br>
+        You can paste:
+        <br>
+        Stata regression output
+        <br>
+        or
+        <br>
+        a screenshot
+      </div>
+
+      <div id="textPreview"></div>
+
+      <img
+        id="imagePreview"
+        alt="Regression screenshot preview"
+      >
+
+    </div>
+
+  </div>
+
+
+  <div class="card">
+
+    <label for="format">
+      Output format
+    </label>
+
+    <select id="format">
+
+      <option value="academic">
+        Academic regression table
+      </option>
+
+      <option value="latex">
+        LaTeX
+      </option>
+
+      <option value="markdown">
+        Markdown table
+      </option>
+
+      <option value="csv">
+        Excel / CSV
+      </option>
+
+      <option value="prose">
+        Academic prose
+      </option>
+
+    </select>
+
+
+    <div class="button-row">
+
+      <button
+        id="convertButton"
+        disabled
+      >
+        Convert
+      </button>
+
+      <button id="clearButton">
+        Clear
+      </button>
+
+    </div>
+
+    <div id="status"></div>
+
+  </div>
+
+
+  <div
+    class="card"
+    id="resultCard"
+  >
+
+    <h2>Result</h2>
+
+    <div id="result"></div>
+
+    <button id="copyButton">
+      Copy result
+    </button>
+
+  </div>
+
 </div>
 
-<div id="debug">
-Waiting for paste...
-</div>
-
-<img id="imagePreview">
 
 <script>
+
+/* ==========================================
+   ADD YOUR MAKE WEBHOOK URL HERE
+========================================== */
+
+const MAKE_WEBHOOK_URL =
+  "PASTE_YOUR_MAKE_WEBHOOK_URL_HERE";
+
+
+/* ==========================================
+   VARIABLES
+========================================== */
+
+let inputType = null;
+
+let pastedText = null;
+
+let pastedImage = null;
+
+
+/* ==========================================
+   HTML ELEMENTS
+========================================== */
 
 const pasteBox =
   document.getElementById("pasteBox");
 
-const debug =
-  document.getElementById("debug");
+const instructions =
+  document.getElementById("instructions");
+
+const textPreview =
+  document.getElementById("textPreview");
 
 const imagePreview =
   document.getElementById("imagePreview");
 
+const detectedType =
+  document.getElementById("detectedType");
+
+const convertButton =
+  document.getElementById("convertButton");
+
+const clearButton =
+  document.getElementById("clearButton");
+
+const copyButton =
+  document.getElementById("copyButton");
+
+const resultCard =
+  document.getElementById("resultCard");
+
+const result =
+  document.getElementById("result");
+
+const status =
+  document.getElementById("status");
+
+
+/* ==========================================
+   PASTE HANDLER
+
+   Important:
+   This is attached directly to pasteBox because
+   this is the method we confirmed works.
+========================================== */
 
 pasteBox.addEventListener(
   "paste",
@@ -82,50 +347,90 @@ pasteBox.addEventListener(
     const clipboard =
       event.clipboardData;
 
-    const types =
-      Array.from(clipboard.types);
+    if (!clipboard) {
 
-    let output =
-      "PASTE EVENT RECEIVED!\n\n";
+      status.textContent =
+        "Clipboard could not be read.";
 
-    output +=
-      "Clipboard types:\n";
-
-    output +=
-      types.join("\n");
-
-    output += "\n\n";
+      return;
+    }
 
 
-    // TEXT
+    /* --------------------------------------
+       FIRST: LOOK FOR IMAGE
+    -------------------------------------- */
+
+    for (const item of clipboard.items) {
+
+      if (
+        item.type &&
+        item.type.startsWith("image/")
+      ) {
+
+        const file =
+          item.getAsFile();
+
+        if (file) {
+
+          pastedImage = file;
+
+          pastedText = null;
+
+          inputType = "image";
+
+          showImage(file);
+
+          return;
+        }
+
+      }
+
+    }
+
+
+    /* --------------------------------------
+       SECOND: TRY TEXT
+    -------------------------------------- */
 
     const plainText =
       clipboard.getData("text/plain");
+
+
+    if (
+      plainText &&
+      plainText.trim().length > 0
+    ) {
+
+      pastedText =
+        plainText;
+
+      pastedImage =
+        null;
+
+      inputType =
+        "text";
+
+      showText(
+        plainText
+      );
+
+      return;
+
+    }
+
+
+    /* --------------------------------------
+       THIRD: TRY HTML
+    -------------------------------------- */
 
     const html =
       clipboard.getData("text/html");
 
 
-    if (plainText) {
-
-      output +=
-        "TEXT FOUND:\n\n";
-
-      output +=
-        plainText;
-
-      pasteBox.innerText =
-        plainText;
-
-    }
-
-    else if (html) {
-
-      output +=
-        "HTML FOUND:\n\n";
-
-      output +=
-        html.substring(0, 1000);
+    if (
+      html &&
+      html.trim().length > 0
+    ) {
 
       const temp =
         document.createElement("div");
@@ -133,48 +438,389 @@ pasteBox.addEventListener(
       temp.innerHTML =
         html;
 
-      pasteBox.innerText =
+      const convertedText =
         temp.innerText;
 
-    }
+
+      pastedText =
+        convertedText;
+
+      pastedImage =
+        null;
+
+      inputType =
+        "text";
 
 
-    // IMAGES
+      showText(
+        convertedText
+      );
 
-    for (const item of clipboard.items) {
-
-      output +=
-        "\n\nItem: " +
-        item.type;
-
-      if (
-        item.type.startsWith("image/")
-      ) {
-
-        const file =
-          item.getAsFile();
-
-        const url =
-          URL.createObjectURL(file);
-
-        imagePreview.src =
-          url;
-
-        output +=
-          "\nIMAGE FOUND!";
-      }
+      return;
 
     }
 
 
-    debug.textContent =
-      output;
+    /* --------------------------------------
+       NOTHING USABLE
+    -------------------------------------- */
+
+    status.textContent =
+      "Clipboard content was detected, but it was not readable as text or image.";
 
   }
 );
 
 
-// Automatically focus paste area
+/* ==========================================
+   SHOW TEXT
+========================================== */
+
+function showText(text) {
+
+  instructions.style.display =
+    "none";
+
+  imagePreview.style.display =
+    "none";
+
+  textPreview.style.display =
+    "block";
+
+  textPreview.textContent =
+    text;
+
+  pasteBox.classList.add(
+    "has-content"
+  );
+
+  detectedType.textContent =
+    "✓ Stata text detected";
+
+  convertButton.disabled =
+    false;
+
+  resultCard.style.display =
+    "none";
+
+  status.textContent =
+    "Ready to convert.";
+
+}
+
+
+/* ==========================================
+   SHOW IMAGE
+========================================== */
+
+function showImage(file) {
+
+  const imageURL =
+    URL.createObjectURL(file);
+
+  instructions.style.display =
+    "none";
+
+  textPreview.style.display =
+    "none";
+
+  imagePreview.style.display =
+    "block";
+
+  imagePreview.src =
+    imageURL;
+
+  pasteBox.classList.add(
+    "has-content"
+  );
+
+  detectedType.textContent =
+    "✓ Screenshot detected";
+
+  convertButton.disabled =
+    false;
+
+  resultCard.style.display =
+    "none";
+
+  status.textContent =
+    "Ready to convert.";
+
+}
+
+
+/* ==========================================
+   CONVERT
+========================================== */
+
+convertButton.addEventListener(
+  "click",
+  async function() {
+
+    if (!inputType) {
+
+      status.textContent =
+        "Paste regression output first.";
+
+      return;
+
+    }
+
+
+    if (
+      MAKE_WEBHOOK_URL.includes(
+        "PASTE_YOUR"
+      )
+    ) {
+
+      status.textContent =
+        "Add your Make webhook URL to index.html first.";
+
+      return;
+
+    }
+
+
+    convertButton.disabled =
+      true;
+
+    convertButton.textContent =
+      "Converting...";
+
+    status.textContent =
+      "Processing regression...";
+
+
+    try {
+
+      const formData =
+        new FormData();
+
+
+      /* Send selected format */
+
+      formData.append(
+        "format",
+        document.getElementById(
+          "format"
+        ).value
+      );
+
+
+      /* Send input type */
+
+      formData.append(
+        "input_type",
+        inputType
+      );
+
+
+      /* Send text */
+
+      if (
+        inputType === "text"
+      ) {
+
+        formData.append(
+          "text",
+          pastedText
+        );
+
+      }
+
+
+      /* Send image */
+
+      if (
+        inputType === "image"
+      ) {
+
+        formData.append(
+          "file",
+          pastedImage,
+          "regression.png"
+        );
+
+      }
+
+
+      /* Send request to Make */
+
+      const response =
+        await fetch(
+          MAKE_WEBHOOK_URL,
+          {
+            method: "POST",
+            body: formData
+          }
+        );
+
+
+      if (!response.ok) {
+
+        throw new Error(
+          "Make returned HTTP " +
+          response.status
+        );
+
+      }
+
+
+      const output =
+        await response.text();
+
+
+      result.textContent =
+        output;
+
+      resultCard.style.display =
+        "block";
+
+      status.textContent =
+        "Done.";
+
+
+      resultCard.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
+
+    }
+
+    catch (error) {
+
+      console.error(error);
+
+      status.textContent =
+        "Error: " +
+        error.message;
+
+    }
+
+    finally {
+
+      convertButton.disabled =
+        false;
+
+      convertButton.textContent =
+        "Convert";
+
+    }
+
+  }
+);
+
+
+/* ==========================================
+   COPY RESULT
+========================================== */
+
+copyButton.addEventListener(
+  "click",
+  async function() {
+
+    try {
+
+      await navigator.clipboard.writeText(
+        result.textContent
+      );
+
+      copyButton.textContent =
+        "Copied!";
+
+      setTimeout(
+        function() {
+
+          copyButton.textContent =
+            "Copy result";
+
+        },
+        1500
+      );
+
+    }
+
+    catch (error) {
+
+      status.textContent =
+        "Could not copy result.";
+
+    }
+
+  }
+);
+
+
+/* ==========================================
+   CLEAR
+========================================== */
+
+clearButton.addEventListener(
+  "click",
+  function() {
+
+    inputType =
+      null;
+
+    pastedText =
+      null;
+
+    pastedImage =
+      null;
+
+
+    textPreview.textContent =
+      "";
+
+    textPreview.style.display =
+      "none";
+
+
+    imagePreview.src =
+      "";
+
+    imagePreview.style.display =
+      "none";
+
+
+    instructions.style.display =
+      "block";
+
+
+    pasteBox.classList.remove(
+      "has-content"
+    );
+
+
+    detectedType.textContent =
+      "";
+
+
+    convertButton.disabled =
+      true;
+
+
+    resultCard.style.display =
+      "none";
+
+
+    result.textContent =
+      "";
+
+
+    status.textContent =
+      "";
+
+
+    pasteBox.focus();
+
+  }
+);
+
+
+/* ==========================================
+   AUTOFOCUS PASTE BOX
+========================================== */
 
 window.addEventListener(
   "load",
